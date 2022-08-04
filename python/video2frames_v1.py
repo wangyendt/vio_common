@@ -110,6 +110,7 @@ def video_to_frames(input_loc, output_loc,
     print("Converting video...\n")
     count = 0
     savedcount = 0
+    df_dict = dict()
     while cap.isOpened():
         # Extract the frame
         ret, frame = cap.read()
@@ -130,7 +131,11 @@ def video_to_frames(input_loc, output_loc,
                 # image_np = cv2.resize(image_np, dsize=(h // 2, w // 2))
                 image_np = cv2.pyrDown(image_np, dstsize=(w // 2, h // 2))
             # Write the results back to output location.
-            cv2.imwrite(os.path.join(output_loc, f"{video_time_stamp[]}.jpg"), image_np)
+            cv2.imwrite(os.path.join(output_loc, f"{video_time_stamp[savedcount] // 1000}.png"), image_np)
+            df_dict[savedcount] = {
+                '#timestamp [ns]': video_time_stamp[savedcount] // 1000,
+                'filename': f"{video_time_stamp[savedcount] // 1000}.png"
+            }
             savedcount += 1
             cv2.imshow('frame', image_np)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -139,6 +144,10 @@ def video_to_frames(input_loc, output_loc,
         if count > (video_length - 1):
             print("Reach end of video, lastest frame id %d" % count)
             break
+    
+    # Save data.csv
+    pd.DataFrame.from_dict(df_dict).T.to_csv(os.path.join(os.path.dirname(output_loc), 'data.csv'), index=False)
+    np.savetxt(os.path.join(os.path.dirname(output_loc), 'timestamp.txt'), [df_dict[i]['#timestamp [ns]'] for i in df_dict], fmt='%d')
 
     # Log the time again
     time_end = time.time()

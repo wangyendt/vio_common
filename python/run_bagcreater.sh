@@ -10,8 +10,9 @@
 # root="/mnt/d/work/data/phone_data/slam/2022_07_29_11_47_06_imu_cam_cali_horizontal_dark_bs_fast_1"
 # python3 kalibr_bagcreater.py --folder $root --imu $root/gyro_accel.csv --video $root/movie.mp4 --video_time_file $root/frame_timestamps.txt --output_bag $root/cam+imu.bag
 
+# 用于将视频和IMU数据转化为orbslam3用的数据格式
 root="/mnt/d/work/data/phone_data/slam/2022_07_25_15_33_52_slam"
-python3 video2frames_v1.py $root/movie.mp4 $root/imgs/ --choose-every-n 1 --downsample-by-2 --video_time_file $root/frame_timestamps.txt
+python3 video2frames_v1.py $root/movie.mp4 $root/mav0/cam0/data --choose-every-n 1 --downsample-by-2 --video_time_file $root/frame_timestamps.txt
 
 # ------------------------- WORK -----------------------------------------
 
