@@ -5,6 +5,8 @@
 """
 
 from __future__ import print_function
+from doctest import OutputChecker
+from email import header
 import time
 import sys
 import os
@@ -39,6 +41,10 @@ def parseArgs():
                         help='Downsample a frame to half of its original width and length.')
     parser.add_argument('--save_rgb',  action='store_true',
                         help='Save RGB or gray.')
+    parser.add_argument('--imu', metavar='imu', type=str,
+                        help='IMU rawdata filename')
+    parser.add_argument('--imu-output-folder', type=str, metavar='imu_output_folder',
+                        help='Specify the imu output folder, typically /mav0/imu0')
     # print help if no argument is specified
     if len(sys.argv) < 2:
         msg = 'Example usage: {} video_and_frame_timestamps/IMG_2805.MOV ' \
@@ -66,7 +72,7 @@ def emptyfolder(folder):
             print(e)
 
 
-def video_to_frames(input_loc, output_loc, 
+def video_to_frames(input_loc, output_loc,
                     video_time_file=None,
                     video_from_to=None,
                     choose_every_n=None,
@@ -81,7 +87,7 @@ def video_to_frames(input_loc, output_loc,
         None
     """
     try:
-        os.mkdir(output_loc)
+        os.makedirs(output_loc)
     except OSError:
         pass
     # emptyfolder(output_loc)
@@ -131,7 +137,8 @@ def video_to_frames(input_loc, output_loc,
                 # image_np = cv2.resize(image_np, dsize=(h // 2, w // 2))
                 image_np = cv2.pyrDown(image_np, dstsize=(w // 2, h // 2))
             # Write the results back to output location.
-            cv2.imwrite(os.path.join(output_loc, f"{video_time_stamp[savedcount] // 1000}.png"), image_np)
+            cv2.imwrite(os.path.join(
+                output_loc, f"{video_time_stamp[savedcount] // 1000}.png"), image_np)
             df_dict[savedcount] = {
                 '#timestamp [ns]': video_time_stamp[savedcount] // 1000,
                 'filename': f"{video_time_stamp[savedcount] // 1000}.png"
@@ -144,10 +151,12 @@ def video_to_frames(input_loc, output_loc,
         if count > (video_length - 1):
             print("Reach end of video, lastest frame id %d" % count)
             break
-    
+
     # Save data.csv
-    pd.DataFrame.from_dict(df_dict).T.to_csv(os.path.join(os.path.dirname(output_loc), 'data.csv'), index=False)
-    np.savetxt(os.path.join(os.path.dirname(output_loc), 'timestamp.txt'), [df_dict[i]['#timestamp [ns]'] for i in df_dict], fmt='%d')
+    pd.DataFrame.from_dict(df_dict).T.to_csv(os.path.join(
+        os.path.dirname(output_loc), 'data.csv'), index=False)
+    np.savetxt(os.path.join(os.path.dirname(output_loc), 'timestamp.txt'), [
+               df_dict[i]['#timestamp [ns]'] for i in df_dict], fmt='%d')
 
     # Log the time again
     time_end = time.time()
@@ -160,8 +169,18 @@ def video_to_frames(input_loc, output_loc,
     print("It took %d seconds for extraction." % (time_end-time_start))
 
 
+def imu_to_frames(imu_path: str, out_path: str):
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+    data = pd.read_csv(imu_path, delimiter=',')
+    data.columns = '#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2],system_time'.split(',')
+    data.drop('system_time', axis=1, inplace=True)
+    data.to_csv(os.path.join(out_path, 'data.csv'), index=None)
+
+
 def main():
     parsed = parseArgs()
+    imu_to_frames(parsed.imu, parsed.imu_output_folder)
     video_to_frames(parsed.video, parsed.output_folder, parsed.video_time_file, parsed.video_from_to,
                     parsed.choose_every_n, parsed.downsample_by_2, parsed.save_rgb)
 
