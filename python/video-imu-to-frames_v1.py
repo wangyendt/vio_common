@@ -173,8 +173,11 @@ def imu_to_frames(imu_path: str, out_path: str):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     data = pd.read_csv(imu_path, delimiter=',')
-    data.columns = '#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2],system_time'.split(',')
-    data.drop('system_time', axis=1, inplace=True)
+    if data.shape[1] == 8:
+        data.columns = '#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2],system_time'.split(',')
+        data.drop('system_time', axis=1, inplace=True)
+    else:
+        data.columns = '#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2]'.split(',')
     data.to_csv(os.path.join(out_path, 'data.csv'), index=None)
 
 

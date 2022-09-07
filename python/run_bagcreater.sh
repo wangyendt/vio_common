@@ -8,12 +8,25 @@
 # python3 create_rosbag_for_images_in_dir.py "/mnt/d/work/data/phone_data/slam/2022_08_09_11_26_09_img_cali" "/mnt/d/work/data/phone_data/slam/2022_08_09_11_26_09_img_cali/img.bag"
 
 # 用于将标定视频转为rosbag
-root="/mnt/d/work/data/phone_data/slam/2022_08_09_11_12_07_imu_cam_cali_horizontal_big_screen_0.382"
-python3 kalibr_bagcreater.py --folder $root --imu $root/gyro_accel.csv --video $root/movie.mp4 --video_time_file $root/frame_timestamps.txt --output_bag $root/cam+imu.bag
+# root="/mnt/d/work/data/phone_data/slam/2022_08_09_11_12_07_imu_cam_cali_horizontal_big_screen_0.382"
+# python3 kalibr_bagcreater.py --folder $root --imu $root/gyro_accel.csv --video $root/movie.mp4 --video_time_file $root/frame_timestamps.txt --output_bag $root/cam+imu.bag
 
-# 用于将视频和IMU数据转化为orbslam3用的数据格式
+# 用于将视频和IMU数据转化为orbslam3用的数据格式(用于跑orbslam，不是为了标定)
 # root="/mnt/d/work/data/phone_data/slam/2022_08_09_17_12_14_slam"
 # python3 video-imu-to-frames_v1.py $root/movie.mp4 $root/mav0/cam0/data --choose-every-n 1 --downsample-by-2 --video_time_file $root/frame_timestamps.txt --imu $root/gyro_accel.csv --imu-output-folder $root/mav0/imu0
+
+
+# 用SlamDemo保存的Cam+Imu转换成rosbag(用于标定)
+root="/mnt/d/work/data/phone_data/slam/2022_09_07_17_02_04_imu_cam_cali_horizontal_big_screen_0.382"
+root="/mnt/d/work/data/phone_data/slam/2022_09_07_17_21_09_imu_cali_slamdemo"
+# python3 images_to_video_ffmpeg_format.py $root/images $root/ffmpeg.txt      # step 1.
+# $root/run_ffmpeg_images_combined.bat -y                                   # step 2. run on Windows
+# python3 kalibr_bagcreater.py --folder $root --imu $root/gyro_acc.csv --video $root/movie.mp4 --video_time_file $root/frame_timestamps.txt --output_bag $root/cam+imu.bag
+
+# python3 video-imu-to-frames_v1.py $root/movie.mp4 $root/mav0/cam0/data --choose-every-n 1 --video_time_file $root/frame_timestamps.txt --imu $root/gyro_acc.csv --imu-output-folder $root/mav0/imu0
+# python3 create_rosbag_for_images_in_dir.py $root/images $root/cam.bag
+python3 kalibr_bagcreater.py --folder $root --imu $root/gyro_acc.csv --output_bag $root/imu2.bag
+# python3 merge_rosbag.py -v $root/cam+imu.bag $root/cam.bag $root/imu.bag
 
 # ------------------------- WORK -----------------------------------------
 
