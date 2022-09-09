@@ -11,7 +11,8 @@ def main():
 
 
     args = parser.parse_args()
-    assert os.path.exists(args.images_dir)
+    # print(args.images_dir)
+    # assert os.path.exists(args.images_dir)
     # assert os.path.exists(args.output_txt_path)
 
     ts_list = []
@@ -25,15 +26,15 @@ def main():
     with open(args.output_txt_path, 'w') as f:
         for i, file in enumerate(os.listdir(args.images_dir)):
             # f.write(f'file {os.path.join(args.images_dir, file)}\n')
-            if i:
-                f.write(f'duration {ts_diff[i-1]}\n')
+            # if i:
+            #     f.write(f'duration {ts_diff[i-1]}\n')
             f.write(f'file images/{file}\n')
     with open(os.path.join(os.path.dirname(args.output_txt_path), 'run_ffmpeg_images_combined.bat'), 'w') as f:
-        f.write("ffmpeg -f concat -i ffmpeg.txt movie.mp4\npause")
-    with open(os.path.join(os.path.dirname(args.output_txt_path), 'frame_timestamps.txt'), 'w') as f:
-        f.write("Frame timestamp[nanosec],Unix time[nanosec]\n")
-        for ts in ts_list:
-            f.write(f'{int(ts*1e9)},{int(ts*1e9)}\n')
+        f.write('ffmpeg -f concat -i ffmpeg.txt -vf "transpose=1" movie.mp4\npause')
+    # with open(os.path.join(os.path.dirname(args.output_txt_path), 'frame_timestamps.txt'), 'w') as f:
+    #     f.write("Frame timestamp[nanosec],Unix time[nanosec]\n")
+    #     for ts in ts_list:
+    #         f.write(f'{int(ts*1e9)},{int(ts*1e9)}\n')
 
 
 
