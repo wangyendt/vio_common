@@ -33,11 +33,10 @@
 
 
 # 将SlamDemo采集的数据转化为cam+imu数据格式（用于跑VIO）
-root="/Users/wayne/Documents/work/project/20230116 slam数据采集/data"
-python3 create_rosbag_for_images_in_dir.py $root/mav0/cam0/data $root/cam.bag
-python3 imu_data_add_current_timestamp_and_make_frame_timestamps.py $root/mav0/imu0/data.csv $root/mav0/cam0/data $root/$root/mav0/cam0/data.csv
-python3 kalibr_bagcreater.py --folder $root --imu $root/data_col_added.csv --output_bag $root/imu.bag
-python3 merge_rosbag.py -v $root/cam+imu.bag $root/cam.bag $root/imu.bag
+root="/media/psf/work/project/20230116 slam数据采集/data"
+# python3 create_rosbag_for_images_in_dir.py "$root/mav0/cam0/data" "$root/cam.bag"
+python3 imu_data_add_current_timestamp_and_make_frame_timestamps.py "$root/mav0/imu0/data.csv" "$root/mav0/cam0/data" "$root/mav0/cam0/data.csv"
+python3 kalibr_bagcreater.py --folder "$root" --imu "$root/mav0/imu0/data_col_added.csv" --output_bag "$root/cam+imu.bag"
 
 
 # 将SlamDemo采集的数据转化为cam+imu.bag（用于标定）

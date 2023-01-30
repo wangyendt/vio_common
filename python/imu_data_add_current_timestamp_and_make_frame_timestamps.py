@@ -22,18 +22,18 @@ def main():
     path = args.imu_path
     data = pd.read_csv(path)
     cur_time = datetime.now().timestamp()
-    ts = data['timestamp'].values / 1e9
+    ts = data['#timestamp [ns]'].values / 1e9
     data["current_timestamp"] = (1e9*(np.arange(0,ts[-1]-ts[0]+0.001,0.002)+cur_time)).astype(int)
     # data["timestamp"] += 4e15
     # data["timestamp"] /= 1e9
     # data = data.astype(float)
     data.to_csv(path.replace('.csv','_col_added.csv'),index=None)
-    if os.path.exists(args.frame_ts_path):
-        os.remove(args.frame_ts_path)
-    with open(args.frame_ts_path, 'w') as f:
+    # if os.path.exists(args.frame_ts_path):
+    #     os.remove(args.frame_ts_path)
+    with open(args.frame_ts_path.replace('.csv','_col_added.csv'), 'w') as f:
         f.write('Frame timestamp[nanosec],Unix time[nanosec]\n')
         for i, file in enumerate(os.listdir(args.images_path)):
-            save_time = int(file[:file.index('.')]) - data.loc[0, "timestamp"] + data.loc[0, "current_timestamp"]
+            save_time = int(file[:file.index('.')]) - data.loc[0, "#timestamp [ns]"] + data.loc[0, "current_timestamp"]
             # print(f"{file[:file.index('.')]},{save_time}\n",save_time)
             f.write(f"{file[:file.index('.')]},{save_time}\n")
 
