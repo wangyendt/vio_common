@@ -561,7 +561,8 @@ def main():
             print("Saved #images {} of {} to bag".format(
                 len(image_files), camid))
     else:
-        raise Exception('Invalid/Empty video file and image folder')
+        print('Only IMU bag will be created.')
+        # raise Exception('Invalid/Empty video file and image folder')
 
     # write imu data
     if (not parsed.imu) and parsed.folder is None:
