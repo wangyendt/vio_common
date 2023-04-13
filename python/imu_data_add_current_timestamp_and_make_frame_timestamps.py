@@ -9,6 +9,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import numpy as np
+from natsort import natsorted
 
 def main():
     parser = argparse.ArgumentParser(description='Add a column to gyro_acc.csv collected by SlamDemo')
@@ -32,7 +33,8 @@ def main():
     #     os.remove(args.frame_ts_path)
     with open(args.frame_ts_path.replace('.csv','_col_added.csv'), 'w') as f:
         f.write('Frame timestamp[nanosec],Unix time[nanosec]\n')
-        for i, file in enumerate(os.listdir(args.images_path)):
+        for i, file in enumerate(natsorted(os.listdir(args.images_path))):
+            if not file.endswith('.png'): continue
             save_time = int(file[:file.index('.')]) - data.loc[0, "#timestamp [ns]"] + data.loc[0, "current_timestamp"]
             # print(f"{file[:file.index('.')]},{save_time}\n",save_time)
             f.write(f"{file[:file.index('.')]},{save_time}\n")
