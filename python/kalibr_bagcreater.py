@@ -520,7 +520,7 @@ def write_gyro_accel_to_rosbag(bag, imufiles, timerange=None, buffertime=5, topi
 def main():
     parsed = parse_args()
 
-    bag = rosbag.Bag(parsed.output_bag, 'w')
+    bag = rosbag.Bag(parsed.output_bag, 'w', compression='lz4')
     videotimerange = None  # time range of video frames in IMU clock
     if parsed.video is not None:
         utility_functions.check_file_exists(parsed.video)
