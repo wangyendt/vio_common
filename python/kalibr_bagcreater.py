@@ -6,6 +6,8 @@ import sys
 import argparse
 import math
 import re
+import random
+from natsort import natsorted
 
 import rosbag
 import rospy
@@ -215,7 +217,7 @@ def load_image_to_ros_msg(filename, timestamp=None):
     return rosimage, timestamp
 
 
-def create_rosbag_for_images_in_dir(data_dir, output_bag, topic = "/cam0/image_raw"):
+def create_rosbag_for_images_in_dir(data_dir, output_bag, topic = "/cam0/image_raw", bootstrap_n_samples=0, bootstrap_n_trials=10):
     """
     Find all images recursively in data_dir, and put them in a rosbag under topic.
     The timestamp for each image is determined by its index.
@@ -226,15 +228,52 @@ def create_rosbag_for_images_in_dir(data_dir, output_bag, topic = "/cam0/image_r
     :return:
     """
     image_files=get_image_files_from_dir(data_dir)
-    print('Found #images {} under {}'.format(len(image_files), data_dir))
-    bag = rosbag.Bag(output_bag, 'w')
-    for index, image_filename in enumerate(image_files):
-        # image_msg, timestamp = load_image_to_ros_msg(image_filename, rospy.Time(index + 1, 0))
-        image_msg, timestamp = load_image_to_ros_msg(image_filename, None)
-        bag.write(topic, image_msg, timestamp)
-    print("Saved #images {} of to bag".format(len(image_files)))
-    bag.close()
+    N = len(image_files)
+    if bootstrap_n_samples == 0:
+        print('Found #images {} under {}'.format(len(image_files), data_dir))
+        bag = rosbag.Bag(output_bag, 'w')
+        for index, image_filename in enumerate(image_files):
+            # image_msg, timestamp = load_image_to_ros_msg(image_filename, rospy.Time(index + 1, 0))
+            image_msg, timestamp = load_image_to_ros_msg(image_filename, None)
+            bag.write(topic, image_msg, timestamp)
+        print("Saved {} images to bag".format(len(image_files)))
+        bag.close()
+    else:
+        print(f'{bootstrap_n_samples=}, {bootstrap_n_trials=}')
+        image_file_list=[random.choices(image_files, k=bootstrap_n_samples) for _ in range(bootstrap_n_trials)]
+        print(f'bootstrap: {len(image_file_list)} groups of {len(image_file_list[0])} images in each')
+        for gi, group in enumerate(image_file_list):
+            save_path = f'{output_bag}_{gi+1}/cam.bag'
+            if not os.path.exists(os.path.dirname(save_path)):
+                os.makedirs(os.path.dirname(save_path))
+            bag = rosbag.Bag(save_path, 'w')
+            for image_file in group:
+                image_msg, timestamp = load_image_to_ros_msg(image_file, None)
+                bag.write(topic, image_msg, timestamp)
+            bag.close()
+            print(f'saved group {gi+1} to {save_path}')
 
+def create_rosbag_for_images_of_2_cameras_in_1_dir(data_dir, bootstrap_n_samples=-1, bootstrap_n_trials=10):
+    cam0_dir = os.path.join(data_dir, 'mav0/cam0')
+    cam1_dir = os.path.join(data_dir, 'mav0/cam1')
+    cam0_image_files = natsorted(get_image_files_from_dir(cam0_dir))
+    cam1_image_files = natsorted(get_image_files_from_dir(cam1_dir))
+    assert len(cam0_image_files) == len(cam1_image_files)
+    N = len(cam0_image_files)
+    if bootstrap_n_samples == -1:
+        bootstrap_n_samples = N
+    image_file_idx_list=[random.choices(range(N), k=bootstrap_n_samples) for _ in range(bootstrap_n_trials)]
+    for i, idx_list in enumerate(image_file_idx_list):
+        bag = rosbag.Bag(os.path.join(data_dir, f'cam_sample_{bootstrap_n_samples}_trial_{i}.bag'), 'w', compression='lz4')
+        for image_filename in cam0_image_files:
+            image_msg, timestamp = load_image_to_ros_msg(image_filename)
+            bag.write(f"/cam0/image_raw", image_msg, timestamp)
+        print(f"Saved #images {len(idx_list)} out of {N} images of cam0 of trial {i} to bag")
+        for image_filename in cam1_image_files:
+            image_msg, timestamp = load_image_to_ros_msg(image_filename)
+            bag.write(f"/cam1/image_raw", image_msg, timestamp)
+        print(f"Saved #images {len(idx_list)} out of {N} images of cam1 of trial {i} to bag")
+        bag.close()
 
 def create_imu_message_time_string(timestamp_str, omega, alpha):
     secs, nsecs = utility_functions.parse_time(timestamp_str, 'ns')
@@ -553,6 +592,7 @@ def main():
         camfolders = get_cam_folders_from_dir(parsed.folder)
         for camdir in camfolders:
             camid = os.path.basename(camdir)
+            print(camid)
             image_files = get_image_files_from_dir(camdir)
             for image_filename in image_files:
                 image_msg, timestamp = load_image_to_ros_msg(image_filename)

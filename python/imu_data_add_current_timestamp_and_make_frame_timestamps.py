@@ -24,7 +24,8 @@ def main():
     data = pd.read_csv(path)
     cur_time = datetime.now().timestamp()
     ts = data['#timestamp [ns]'].values / 1e9
-    data["current_timestamp"] = (1e9*(np.arange(0,ts[-1]-ts[0]+0.001,0.002)+cur_time)).astype(int)
+    # data["current_timestamp"] = (1e9*(np.arange(0,ts[-1]-ts[0]+0.001,0.002)+cur_time)).astype(int)
+    data["current_timestamp"] = (1e9*(ts - ts[0] + cur_time)).astype(int)
     # data["timestamp"] += 4e15
     # data["timestamp"] /= 1e9
     # data = data.astype(float)
